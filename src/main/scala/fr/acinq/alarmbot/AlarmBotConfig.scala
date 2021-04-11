@@ -9,7 +9,7 @@ object AlarmBotConfig {
 
   val config: TypesafeConfig = ConfigFactory parseFile new File(resourcesDir, "alarmbot.conf")
 
-  val bot: String = config.as[String]("config.botApiKey")
+  val botApiKey: String = config.as[String]("config.botApiKey")
 
-  val chat: String = config.as[String]("config.chatId")
+  val chatId: String = config.as[String]("config.chatId")
 }

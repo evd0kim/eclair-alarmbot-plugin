@@ -2,7 +2,7 @@ package fr.acinq.alarmbot
 
 import scala.concurrent.duration._
 import com.softwaremill.sttp._
-import akka.actor.{Actor, DiagnosticActorLogging}
+import akka.actor.DiagnosticActorLogging
 import fr.acinq.eclair.{Kit, Setup}
 import fr.acinq.eclair.blockchain.watchdogs.BlockchainWatchdog.DangerousBlocksSkew
 import com.softwaremill.sttp.SttpBackend
@@ -10,9 +10,7 @@ import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 trait Messenger {
-  val botApiKey: String = AlarmBotConfig.bot
-
-  val chatId: String = AlarmBotConfig.chat
+  import fr.acinq.alarmbot.AlarmBotConfig.{botApiKey, chatId}
 
   val readTimeout: FiniteDuration = 10.seconds
 
