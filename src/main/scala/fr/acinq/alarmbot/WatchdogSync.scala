@@ -8,8 +8,8 @@ import java.net.URLEncoder
 import scalaj.http.Http
 
 trait Messenger {
-  val botApiKey = Config.bot
-  val chatId = Config.chat
+  val botApiKey = AlarmBotConfig.bot
+  val chatId = AlarmBotConfig.chat
   val connectionTimeout = 1000 * 10 // in milliseconds
   val readTimeout = 1000 * 10 // in milliseconds
 
