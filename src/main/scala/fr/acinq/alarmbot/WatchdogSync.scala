@@ -24,7 +24,7 @@ trait Messenger {
   }
 }
 
-class WatchdogSync(kit: Kit, setup: Setup) extends Actor with DiagnosticActorLogging with Messenger {
+class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with Messenger {
   context.system.eventStream.subscribe(channel = classOf[DangerousBlocksSkew], subscriber = self)
 
   import setup.{ec, sttpBackend}
