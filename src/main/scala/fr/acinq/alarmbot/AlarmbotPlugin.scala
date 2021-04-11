@@ -6,9 +6,12 @@ import akka.actor.Props
 
 
 class AlarmbotPlugin extends Plugin with Logging {
-  override def onSetup(setup: Setup): Unit = { /* Do nothing for now */ }
 
-  override def onKit(kit: Kit): Unit = kit.system actorOf Props(classOf[WatchdogSync], kit)
+  private var setupRef: Setup = _
+
+  override def onSetup(setup: Setup): Unit = setupRef = setup
+
+  override def onKit(kit: Kit): Unit = kit.system actorOf Props(classOf[WatchdogSync], kit, setupRef)
 
   override def params: PluginParams = new PluginParams {
     override def name: String = "AlarmBot"
