@@ -6,6 +6,8 @@ import akka.actor.DiagnosticActorLogging
 import fr.acinq.eclair.{Kit, Setup}
 import fr.acinq.eclair.blockchain.watchdogs.BlockchainWatchdog.DangerousBlocksSkew
 import com.softwaremill.sttp.SttpBackend
+import fr.acinq.eclair.channel.{AbstractCommitments, ChannelClosed, ChannelStateChanged, Commitments, NORMAL, WAIT_FOR_FUNDING_LOCKED}
+
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
@@ -24,6 +26,8 @@ trait Messenger {
 
 class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with Messenger {
   context.system.eventStream.subscribe(channel = classOf[DangerousBlocksSkew], subscriber = self)
+  context.system.eventStream.subscribe(channel = classOf[ChannelStateChanged], subscriber = self)
+  context.system.eventStream.subscribe(channel = classOf[ChannelClosed], subscriber = self)
 
   import setup.{ec, sttpBackend}
 
@@ -33,6 +37,14 @@ class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with M
   }
 
   override def receive: Receive = {
-    case _: DangerousBlocksSkew => sendMessage("Alarmbot received *DangerousBlocksSkew*")
+    case ChannelStateChanged(_, channelId, _, remoteNodeId, WAIT_FOR_FUNDING_LOCKED, NORMAL, commitsOpt) =>
+      val details = commitsOpt.map(cs => s"capacity *${cs.capacity} sat*, announceChannel *${cs.announceChannel}*")
+      sendMessage(s"New channel established, remoteNodeId *$remoteNodeId*, channelId *$channelId*, ${details.orNull}")
+
+    case ChannelClosed(_, channelId, closingType, _) =>
+      sendMessage(s"Channel closed, channelId *$channelId*, closingType *${closingType.getClass.getName}*")
+
+    case _: DangerousBlocksSkew =>
+      sendMessage("Node received a *DangerousBlocksSkew* event!")
   }
 }
