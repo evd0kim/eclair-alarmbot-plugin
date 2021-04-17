@@ -25,7 +25,7 @@ trait Messenger {
 }
 
 class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with Messenger {
-  context.system.eventStream.subscribe(channel = classOf[CustomAlarmMessage], subscriber = self)
+  context.system.eventStream.subscribe(channel = classOf[CustomAlarmBotMessage], subscriber = self)
   context.system.eventStream.subscribe(channel = classOf[DangerousBlocksSkew], subscriber = self)
   context.system.eventStream.subscribe(channel = classOf[ChannelStateChanged], subscriber = self)
   context.system.eventStream.subscribe(channel = classOf[ChannelClosed], subscriber = self)
@@ -48,7 +48,7 @@ class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with M
     case _: DangerousBlocksSkew =>
       sendMessage("Received a *DangerousBlocksSkew* event!")
 
-    case msg: CustomAlarmMessage =>
+    case msg: CustomAlarmBotMessage =>
       sendMessage(s"*${msg.senderEntity}*: ${msg.message}")
   }
 }

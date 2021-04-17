@@ -6,7 +6,7 @@ package fr.acinq.alarmbot
  * (2) Extend this trait, implement methods and broadcast when needed
  * (3) Alarmbot will catch your custom message and send it to TG
  */
-trait CustomAlarmMessage {
+trait CustomAlarmBotMessage {
   def senderEntity: String
   def message: String
 }
