@@ -49,6 +49,6 @@ class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with M
       sendMessage("Received a *DangerousBlocksSkew* event!")
 
     case msg: CustomAlarmMessage =>
-      sendMessage(s"*${msg.senderEntity}*: *${msg.message}*")
+      sendMessage(s"*${msg.senderEntity}*: ${msg.message}")
   }
 }
