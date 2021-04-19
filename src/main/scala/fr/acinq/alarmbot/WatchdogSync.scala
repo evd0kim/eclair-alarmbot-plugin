@@ -6,7 +6,7 @@ import akka.actor.DiagnosticActorLogging
 import fr.acinq.eclair.{Kit, Setup}
 import fr.acinq.eclair.blockchain.watchdogs.BlockchainWatchdog.DangerousBlocksSkew
 import com.softwaremill.sttp.SttpBackend
-import fr.acinq.eclair.channel.{AbstractCommitments, ChannelClosed, ChannelStateChanged, Commitments, NORMAL, WAIT_FOR_FUNDING_LOCKED}
+import fr.acinq.eclair.channel.{ChannelClosed, ChannelStateChanged, NORMAL, WAIT_FOR_FUNDING_LOCKED}
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
@@ -25,6 +25,7 @@ trait Messenger {
 }
 
 class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with Messenger {
+  context.system.eventStream.subscribe(channel = classOf[CustomAlarmBotMessage], subscriber = self)
   context.system.eventStream.subscribe(channel = classOf[DangerousBlocksSkew], subscriber = self)
   context.system.eventStream.subscribe(channel = classOf[ChannelStateChanged], subscriber = self)
   context.system.eventStream.subscribe(channel = classOf[ChannelClosed], subscriber = self)
@@ -45,6 +46,9 @@ class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with M
       sendMessage(s"Channel closed, channelId *$channelId*, closingType *${closingType.getClass.getName}*")
 
     case _: DangerousBlocksSkew =>
-      sendMessage("Node received a *DangerousBlocksSkew* event!")
+      sendMessage("Received a *DangerousBlocksSkew* event!")
+
+    case msg: CustomAlarmBotMessage =>
+      sendMessage(s"*${msg.senderEntity}*: ${msg.message}")
   }
 }
