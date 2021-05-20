@@ -6,6 +6,7 @@ import akka.actor.DiagnosticActorLogging
 import fr.acinq.eclair.{Kit, Setup}
 import fr.acinq.eclair.blockchain.watchdogs.BlockchainWatchdog.DangerousBlocksSkew
 import com.softwaremill.sttp.SttpBackend
+import fr.acinq.eclair.blockchain.bitcoind.zmq.ZMQActor.{ZMQConnected, ZMQDisconnected}
 import fr.acinq.eclair.channel.{ChannelClosed, ChannelStateChanged, NORMAL, WAIT_FOR_FUNDING_LOCKED}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -44,6 +45,12 @@ class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with M
 
     case ChannelClosed(_, channelId, closingType, _) =>
       sendMessage(s"Channel closed, channelId *$channelId*, closingType *${closingType.getClass.getName}*")
+
+    case ZMQConnected =>
+      sendMessage("ZMQ connection UP")
+
+    case ZMQDisconnected =>
+      sendMessage("ZMQ connection DOWN")
 
     case _: DangerousBlocksSkew =>
       sendMessage("Received a *DangerousBlocksSkew* event!")
