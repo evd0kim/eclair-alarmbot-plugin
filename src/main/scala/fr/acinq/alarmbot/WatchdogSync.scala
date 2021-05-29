@@ -6,7 +6,8 @@ import akka.actor.DiagnosticActorLogging
 import fr.acinq.eclair.{Kit, Setup}
 import fr.acinq.eclair.blockchain.watchdogs.BlockchainWatchdog.DangerousBlocksSkew
 import com.softwaremill.sttp.SttpBackend
-import fr.acinq.eclair.blockchain.bitcoind.zmq.ZMQActor.{ZMQConnected, ZMQDisconnected}
+import fr.acinq.eclair.blockchain.bitcoind.zmq.ZMQActor
+import fr.acinq.eclair.blockchain.bitcoind.zmq.ZMQActor.{ZMQConnected, ZMQDisconnected, ZMQEvent}
 import fr.acinq.eclair.channel.{ChannelClosed, ChannelStateChanged, NORMAL, WAIT_FOR_FUNDING_LOCKED}
 
 import scala.concurrent.{ExecutionContext, Future}
@@ -30,6 +31,7 @@ class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with M
   context.system.eventStream.subscribe(channel = classOf[DangerousBlocksSkew], subscriber = self)
   context.system.eventStream.subscribe(channel = classOf[ChannelStateChanged], subscriber = self)
   context.system.eventStream.subscribe(channel = classOf[ChannelClosed], subscriber = self)
+  context.system.eventStream.subscribe(channel = classOf[ZMQEvent], subscriber = self)
 
   import setup.{ec, sttpBackend}
 
