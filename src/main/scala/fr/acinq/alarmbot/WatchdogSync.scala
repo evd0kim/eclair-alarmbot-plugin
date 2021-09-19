@@ -21,7 +21,7 @@ trait Messenger {
   val baseUri: Uri = uri"https://api.telegram.org/bot$botApiKey/sendMessage"
 
   def sendMessage(message: String)(implicit http: SttpBackend[Future, Nothing], ec: ExecutionContext): Future[Response[String]] = {
-    val parametrizedUri = baseUri.params("chat_id" -> chatId, "text" -> URLEncoder.encode(message, "UTF-8"), "parse_mode" -> "MarkdownV2")
+    val parametrizedUri = baseUri.params("chat_id" -> chatId, "text" -> s"""$message""", "parse_mode" -> "MarkdownV2")
     sttp.readTimeout(readTimeout).get(parametrizedUri).send.map(identity)
   }
 }
