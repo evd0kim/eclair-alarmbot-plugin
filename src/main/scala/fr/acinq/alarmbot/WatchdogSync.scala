@@ -21,7 +21,7 @@ trait Messenger {
   val baseUri: Uri = uri"https://api.telegram.org/bot$botApiKey/sendMessage"
 
   def sendMessage(message: String)(implicit http: SttpBackend[Future, Nothing], ec: ExecutionContext): Future[Response[String]] = {
-    val parametrizedUri = baseUri.params("chat_id" -> chatId, "text" -> s"""$message""", "parse_mode" -> "MarkdownV2")
+    val parametrizedUri = baseUri.params("chat_id" -> chatId, "text" -> message, "parse_mode" -> "HTML")
     sttp.readTimeout(readTimeout).get(parametrizedUri).send.map(identity)
   }
 }
@@ -40,15 +40,15 @@ class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with M
     case Success(response) => log.info(s"PLGN AlarmBot, sent '$tag' successfully, response code=${response.code}, body=${response.body}")
   }
 
-  override def preStart(): Unit = sendMessage("Node *runs*").onComplete(logReport("preStart"))
+  override def preStart(): Unit = sendMessage("Node runs").onComplete(logReport("preStart"))
 
   override def receive: Receive = {
     case ChannelStateChanged(_, channelId, _, remoteNodeId, WAIT_FOR_FUNDING_LOCKED, NORMAL, commitsOpt) =>
-      val details = commitsOpt.map(commtis => s"capacity *${commtis.capacity} sat*, announceChannel *${commtis.announceChannel}*")
-      sendMessage(s"New channel established, remoteNodeId *$remoteNodeId*, channelId *$channelId*, ${details.orNull}").onComplete(logReport("ChannelStateChanged"))
+      val details = commitsOpt.map(commtis => s"capacity: ${commtis.capacity} sat, announceChannel: ${commtis.announceChannel}")
+      sendMessage(s"New channel established, remoteNodeId: $remoteNodeId, channelId: $channelId, ${details.orNull}").onComplete(logReport("ChannelStateChanged"))
 
     case ChannelClosed(_, channelId, closingType, _) =>
-      sendMessage(s"Channel closed, channelId *$channelId*, closingType *${closingType.getClass.getName}*").onComplete(logReport("ChannelClosed"))
+      sendMessage(s"Channel closed, channelId: $channelId, closingType: ${closingType.getClass.getName}").onComplete(logReport("ChannelClosed"))
 
     case ZMQConnected =>
       sendMessage("ZMQ connection UP").onComplete(logReport("ZMQConnected"))
@@ -57,9 +57,9 @@ class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with M
       sendMessage("ZMQ connection DOWN").onComplete(logReport("ZMQDisconnected"))
 
     case msg: DangerousBlocksSkew =>
-      sendMessage(s"*DangerousBlocksSkew* from ${msg.recentHeaders.source}").onComplete(logReport("DangerousBlocksSkew"))
+      sendMessage(s"DangerousBlocksSkew from ${msg.recentHeaders.source}").onComplete(logReport("DangerousBlocksSkew"))
 
     case msg: CustomAlarmBotMessage =>
-      sendMessage(s"*${msg.senderEntity}*: ${msg.message}").onComplete(logReport("CustomAlarmBotMessage"))
+      sendMessage(s"${msg.senderEntity}: ${msg.message}").onComplete(logReport("CustomAlarmBotMessage"))
   }
 }
