@@ -9,6 +9,7 @@ import com.softwaremill.sttp.SttpBackend
 import fr.acinq.eclair.blockchain.bitcoind.zmq.ZMQActor.{ZMQConnected, ZMQDisconnected, ZMQEvent}
 import fr.acinq.eclair.channel.{ChannelClosed, ChannelStateChanged, NORMAL, WAIT_FOR_FUNDING_LOCKED}
 
+import java.net.URLEncoder
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
@@ -20,7 +21,7 @@ trait Messenger {
   val baseUri: Uri = uri"https://api.telegram.org/bot$botApiKey/sendMessage"
 
   def sendMessage(message: String)(implicit http: SttpBackend[Future, Nothing], ec: ExecutionContext): Future[Response[String]] = {
-    val parametrizedUri = baseUri.params("chat_id" -> chatId, "text" -> message, "parse_mode" -> "MarkdownV2")
+    val parametrizedUri = baseUri.params("chat_id" -> chatId, "text" -> URLEncoder.encode(message, "UTF-8"), "parse_mode" -> "MarkdownV2")
     sttp.readTimeout(readTimeout).get(parametrizedUri).send.map(identity)
   }
 }
