@@ -6,12 +6,10 @@ import akka.actor.DiagnosticActorLogging
 import fr.acinq.eclair.{Kit, Setup}
 import fr.acinq.eclair.blockchain.watchdogs.BlockchainWatchdog.DangerousBlocksSkew
 import com.softwaremill.sttp.SttpBackend
-import fr.acinq.eclair.blockchain.bitcoind.zmq.ZMQActor
 import fr.acinq.eclair.blockchain.bitcoind.zmq.ZMQActor.{ZMQConnected, ZMQDisconnected, ZMQEvent}
 import fr.acinq.eclair.channel.{ChannelClosed, ChannelStateChanged, NORMAL, WAIT_FOR_FUNDING_LOCKED}
-
 import scala.concurrent.{ExecutionContext, Future}
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 trait Messenger {
   import fr.acinq.alarmbot.AlarmBotConfig.{botApiKey, chatId}
@@ -20,9 +18,9 @@ trait Messenger {
 
   val baseUri: Uri = uri"https://api.telegram.org/bot$botApiKey/sendMessage"
 
-  def sendMessage(message: String)(implicit http: SttpBackend[Future, Nothing], ec: ExecutionContext): Future[StatusCode] = {
-    val parametrizedUri = baseUri.params("chat_id" -> chatId, "text" -> message, "parse_mode" -> "MarkdownV2")
-    sttp.readTimeout(readTimeout).get(parametrizedUri).send.map(_.code)
+  def sendMessage(message: String)(implicit http: SttpBackend[Future, Nothing], ec: ExecutionContext): Future[Response[String]] = {
+    val parametrizedUri = baseUri.params("chat_id" -> chatId, "text" -> message, "parse_mode" -> "HTML")
+    sttp.readTimeout(readTimeout).get(parametrizedUri).send.map(identity)
   }
 }
 
@@ -35,29 +33,31 @@ class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with M
 
   import setup.{ec, sttpBackend}
 
-  override def preStart(): Unit = sendMessage("Node *runs*").onComplete {
-    case Failure(reason) => log.info(s"PLGN AlarmBot, failed to send message on preStart, reason: ${reason.getMessage}")
-    case Success(statusCode) => log.info(s"PLGN AlarmBot, alarmbot sent message successfully, response code was $statusCode")
+  def logReport(tag: String): PartialFunction[Try[Response[String]], Unit] = {
+    case Failure(reason) => log.info(s"PLGN AlarmBot, failed to send '$tag', reason: ${reason.getMessage}")
+    case Success(response) => log.info(s"PLGN AlarmBot, sent '$tag' successfully, response code=${response.code}, body=${response.body}")
   }
+
+  override def preStart(): Unit = sendMessage("Node runs").onComplete(logReport("preStart"))
 
   override def receive: Receive = {
     case ChannelStateChanged(_, channelId, _, remoteNodeId, WAIT_FOR_FUNDING_LOCKED, NORMAL, commitsOpt) =>
-      val details = commitsOpt.map(cs => s"capacity *${cs.capacity} sat*, announceChannel *${cs.announceChannel}*")
-      sendMessage(s"New channel established, remoteNodeId *$remoteNodeId*, channelId *$channelId*, ${details.orNull}")
+      val details = commitsOpt.map(commtis => s"capacity: ${commtis.capacity}, announceChannel: ${commtis.announceChannel}")
+      sendMessage(s"New channel established, remoteNodeId: $remoteNodeId, channelId: $channelId, ${details.orNull}").onComplete(logReport("ChannelStateChanged"))
 
     case ChannelClosed(_, channelId, closingType, _) =>
-      sendMessage(s"Channel closed, channelId *$channelId*, closingType *${closingType.getClass.getName}*")
+      sendMessage(s"Channel closed, channelId: $channelId, closingType: ${closingType.getClass.getName}").onComplete(logReport("ChannelClosed"))
 
     case ZMQConnected =>
-      sendMessage("ZMQ connection UP")
+      sendMessage("ZMQ connection UP").onComplete(logReport("ZMQConnected"))
 
     case ZMQDisconnected =>
-      sendMessage("ZMQ connection DOWN")
+      sendMessage("ZMQ connection DOWN").onComplete(logReport("ZMQDisconnected"))
 
-    case _: DangerousBlocksSkew =>
-      sendMessage("Received a *DangerousBlocksSkew* event!")
+    case msg: DangerousBlocksSkew =>
+      sendMessage(s"DangerousBlocksSkew from ${msg.recentHeaders.source}").onComplete(logReport("DangerousBlocksSkew"))
 
     case msg: CustomAlarmBotMessage =>
-      sendMessage(s"*${msg.senderEntity}*: ${msg.message}")
+      sendMessage(s"${msg.senderEntity}: ${msg.message}").onComplete(logReport("CustomAlarmBotMessage"))
   }
 }
