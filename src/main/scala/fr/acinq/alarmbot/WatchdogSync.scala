@@ -42,7 +42,7 @@ class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with M
 
   override def receive: Receive = {
     case ChannelStateChanged(_, channelId, _, remoteNodeId, WAIT_FOR_FUNDING_LOCKED, NORMAL, commitsOpt) =>
-      val details = commitsOpt.map(commtis => s"capacity: ${commtis.capacity} sat, announceChannel: ${commtis.announceChannel}")
+      val details = commitsOpt.map(commtis => s"capacity: ${commtis.capacity}, announceChannel: ${commtis.announceChannel}")
       sendMessage(s"New channel established, remoteNodeId: $remoteNodeId, channelId: $channelId, ${details.orNull}").onComplete(logReport("ChannelStateChanged"))
 
     case ChannelClosed(_, channelId, closingType, _) =>
