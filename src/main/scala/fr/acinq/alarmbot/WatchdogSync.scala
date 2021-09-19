@@ -19,10 +19,8 @@ trait Messenger {
 
   val baseUri: Uri = uri"https://api.telegram.org/bot$botApiKey/sendMessage"
 
-  def sendMessage(message: String)(implicit http: SttpBackend[Future, Nothing], ec: ExecutionContext): Future[StatusCode] = {
-    val parametrizedUri = baseUri.params("chat_id" -> chatId, "text" -> message, "parse_mode" -> "MarkdownV2")
-    sttp.readTimeout(readTimeout).get(parametrizedUri).send.map(_.code)
-  }
+  def sendMessage(message: String)(implicit http: SttpBackend[Future, Nothing], ec: ExecutionContext): Future[Response[String]] =
+    sttp.readTimeout(readTimeout).get(baseUri.params("chat_id" -> chatId, "text" -> message, "parse_mode" -> "MarkdownV2")).send
 }
 
 class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with Messenger {
@@ -34,9 +32,9 @@ class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with M
 
   import setup.{ec, sttpBackend}
 
-  def logReport(tag: String): PartialFunction[Try[StatusCode], Unit] = {
+  def logReport(tag: String): PartialFunction[Try[Response[String]], Unit] = {
     case Failure(reason) => log.info(s"PLGN AlarmBot, failed to send '$tag', reason: ${reason.getMessage}")
-    case Success(statusCode) => log.info(s"PLGN AlarmBot, sent '$tag' successfully, response code was $statusCode")
+    case Success(response) => log.info(s"PLGN AlarmBot, sent '$tag' successfully, response code=${response.code}, body=${response.body}")
   }
 
   override def preStart(): Unit = sendMessage("Node *runs*").onComplete(logReport("preStart"))
