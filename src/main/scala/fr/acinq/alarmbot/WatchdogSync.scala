@@ -8,8 +8,6 @@ import fr.acinq.eclair.blockchain.watchdogs.BlockchainWatchdog.DangerousBlocksSk
 import com.softwaremill.sttp.SttpBackend
 import fr.acinq.eclair.blockchain.bitcoind.zmq.ZMQActor.{ZMQConnected, ZMQDisconnected, ZMQEvent}
 import fr.acinq.eclair.channel.{ChannelClosed, ChannelStateChanged, NORMAL, WAIT_FOR_FUNDING_LOCKED}
-
-import java.net.URLEncoder
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 
