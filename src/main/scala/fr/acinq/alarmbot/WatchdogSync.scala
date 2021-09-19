@@ -53,10 +53,12 @@ class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with M
     case ZMQDisconnected =>
       sendMessage("ZMQ connection DOWN")
 
-    case _: DangerousBlocksSkew =>
+    case msg: DangerousBlocksSkew =>
+      log.info(s"PLGN AlarmBot, DangerousBlocksSkew ${msg.recentHeaders.source}")
       sendMessage("Received a *DangerousBlocksSkew* event!")
 
     case msg: CustomAlarmBotMessage =>
+      log.info(s"PLGN AlarmBot, CustomAlarmBotMessage ${msg.senderEntity}")
       sendMessage(s"*${msg.senderEntity}*: ${msg.message}")
   }
 }
