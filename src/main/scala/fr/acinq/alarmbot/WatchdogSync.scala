@@ -19,8 +19,10 @@ trait Messenger {
 
   val baseUri: Uri = uri"https://api.telegram.org/bot$botApiKey/sendMessage"
 
-  def sendMessage(message: String)(implicit http: SttpBackend[Future, Nothing], ec: ExecutionContext): Future[Response[String]] =
-    sttp.readTimeout(readTimeout).get(baseUri.params("chat_id" -> chatId, "text" -> message, "parse_mode" -> "MarkdownV2")).send
+  def sendMessage(message: String)(implicit http: SttpBackend[Future, Nothing], ec: ExecutionContext): Future[Response[String]] = {
+    val parametrizedUri = baseUri.params("chat_id" -> chatId, "text" -> message, "parse_mode" -> "MarkdownV2")
+    sttp.readTimeout(readTimeout).get(parametrizedUri).send.map(identity)
+  }
 }
 
 class WatchdogSync(kit: Kit, setup: Setup) extends DiagnosticActorLogging with Messenger {
