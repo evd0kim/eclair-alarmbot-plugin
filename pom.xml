@@ -88,11 +88,13 @@
             <groupId>fr.acinq.eclair</groupId>
             <artifactId>eclair-core_2.13</artifactId>
             <version>${eclair.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>fr.acinq.eclair</groupId>
             <artifactId>eclair-node_2.13</artifactId>
             <version>${eclair.version}</version>
+            <scope>provided</scope>
         </dependency>
         <dependency>
             <groupId>com.iheart</groupId>
