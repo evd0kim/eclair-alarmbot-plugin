@@ -1,13 +1,13 @@
 package fr.acinq.alarmbot
 
-import scala.concurrent.duration._
-import com.softwaremill.sttp._
 import akka.actor.DiagnosticActorLogging
-import fr.acinq.eclair.{Kit, Setup}
-import fr.acinq.eclair.blockchain.watchdogs.BlockchainWatchdog.DangerousBlocksSkew
-import com.softwaremill.sttp.SttpBackend
+import com.softwaremill.sttp.{SttpBackend, _}
 import fr.acinq.eclair.blockchain.bitcoind.zmq.ZMQActor.{ZMQConnected, ZMQDisconnected, ZMQEvent}
+import fr.acinq.eclair.blockchain.watchdogs.BlockchainWatchdog.DangerousBlocksSkew
 import fr.acinq.eclair.channel.{ChannelClosed, ChannelStateChanged, NORMAL, WAIT_FOR_FUNDING_LOCKED}
+import fr.acinq.eclair.{Kit, Setup}
+
+import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success, Try}
 

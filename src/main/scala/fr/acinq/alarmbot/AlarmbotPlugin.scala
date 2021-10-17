@@ -1,8 +1,8 @@
 package fr.acinq.alarmbot
 
+import akka.actor.Props
 import fr.acinq.eclair.{Kit, Plugin, PluginParams, Setup}
 import grizzled.slf4j.Logging
-import akka.actor.Props
 
 
 class AlarmbotPlugin extends Plugin with Logging {
