@@ -35,7 +35,7 @@ class WatchdogSync(setup: Setup, botApiKey: String, chatId: String) extends Diag
 
   import setup.{ec, sttpBackend}
 
-  override def preStart(): Unit = sendMessage("Node runs").onComplete(logReport("preStart"))
+  override def preStart: Unit = sendMessage("Node runs").onComplete(logReport("preStart"))
 
   override def receive: Receive = {
     case ChannelStateChanged(_, channelId, _, remoteNodeId, WAIT_FOR_FUNDING_LOCKED, NORMAL, commitsOpt) =>
