@@ -1,7 +1,8 @@
 package fr.acinq.alarmbot
 
-import net.ceedubs.ficus.Ficus._
 import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
+import net.ceedubs.ficus.Ficus._
+
 import java.io.File
 
 class AlarmBotConfig(datadir: File) {
