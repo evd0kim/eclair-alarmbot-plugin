@@ -4,8 +4,8 @@ import net.ceedubs.ficus.Ficus._
 import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 import java.io.File
 
-object AlarmBotConfig {
-  val resourcesDir: String = s"${System getProperty "user.dir"}/plugin-resources/alarmbot"
+class AlarmBotConfig(datadir: File) {
+  val resourcesDir: File = new File(datadir, "/plugin-resources/alarmbot/")
 
   val config: TypesafeConfig = ConfigFactory parseFile new File(resourcesDir, "alarmbot.conf")
 
