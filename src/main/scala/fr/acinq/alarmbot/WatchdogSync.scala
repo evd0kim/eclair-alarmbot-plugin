@@ -34,7 +34,7 @@ class WatchdogSync(kit: Kit, setup: Setup, pluginConfig: AlarmBotConfig) extends
     case Success(response) => log.info(s"PLGN AlarmBot, sent '$tag' successfully, response code=${response.code}, body=${response.body}")
   }
 
-  override def preStart(): Unit = tgbot.sendMessage("Node runs").onComplete(logReport("preStart"))
+  override def preStart(): Unit = tgbot.sendMessage(s"Node is starting. Alias: ${kit.nodeParams.alias} nodeId: ${kit.nodeParams.nodeId} instanceId: ${kit.nodeParams.instanceId} ").onComplete(logReport("preStart"))
 
   override def receive: Receive = {
     case ChannelStateChanged(_, channelId, _, remoteNodeId, WAIT_FOR_FUNDING_LOCKED, NORMAL, commitsOpt) =>
