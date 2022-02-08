@@ -1,13 +1,26 @@
 package fr.acinq.alarmbot
 
+import com.softwaremill.sttp._
 import akka.actor.DiagnosticActorLogging
-import com.softwaremill.sttp.Response
-import fr.acinq.eclair.{Kit, Setup}
 
 import scala.util.{Failure, Success, Try}
+import fr.acinq.eclair.{Kit, MilliSatoshi, Setup}
+import org.json4s.JsonAST.JObject
+import org.json4s.Serialization
+import org.json4s.jackson.Serialization
 
+// requests
+import scala.concurrent.duration._
+import scala.concurrent.{ExecutionContext, Future}
+import com.softwaremill.sttp.json4s.asJson
+import com.softwaremill.sttp.{StatusCodes, SttpBackend, SttpBackendOptions, Uri, UriContext, sttp}
 
 class ExternalHedgeClient(kit: Kit, setup: Setup, pluginConfig: AlarmBotConfig) extends DiagnosticActorLogging {
+  val kolliderClient = new KolliderClient(pluginConfig)
+
+  import setup.{ec, sttpBackend}
+  implicit val serialization: Serialization = Serialization
+
   context.system.eventStream.subscribe(channel = classOf[ExternalHedgeMessage], subscriber = self)
 
   def logReport(tag: String): PartialFunction[Try[Response[String]], Unit] = {
@@ -18,6 +31,8 @@ class ExternalHedgeClient(kit: Kit, setup: Setup, pluginConfig: AlarmBotConfig) 
   override def preStart(): Unit = log.info(s"Launching hedge bot")
 
   override def receive: Receive = {
-    case msg: ExternalHedgeMessage => println(s"${msg.senderEntity}: ${msg.amount} ${msg.rate}")
+    case msg: ExternalHedgeMessage => {
+      kolliderClient.sendMessage(msg.amount, msg.rate).onComplete(logReport("ZMQDisconnected"))
+    }
   }
 }
