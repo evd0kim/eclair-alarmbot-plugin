@@ -23,7 +23,7 @@ class ExternalHedgeClient(kit: Kit, setup: Setup, pluginConfig: AlarmBotConfig) 
 
   context.system.eventStream.subscribe(channel = classOf[ExternalHedgeMessage], subscriber = self)
 
-  def logReport(tag: String): PartialFunction[Try[Response[String]], Unit] = {
+  def logReport[T](tag: String): PartialFunction[Try[Response[T]], Unit] = {
     case Failure(reason) => log.info(s"PLGN AlarmBot, failed to execute '$tag', reason: ${reason.getMessage}")
     case Success(response) => log.info(s"PLGN AlarmBot, execute '$tag' successfully, response code=${response.code}, body=${response.body}")
   }
