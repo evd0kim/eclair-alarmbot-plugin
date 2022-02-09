@@ -21,11 +21,10 @@ class KolliderClient(pluginConfig: AlarmBotConfig) {
     sttp.readTimeout(readTimeout).get(parametrizedUri).send.map(identity)
   }
 
-  case class HedgeRequest(sats: Long, rate: Long)
+  //case class HedgeRequest(sats: Long, rate: Long)
+  //HedgeRequest(amount.toLong, rate.toLong)
   case class HedgeResponse()
 
-  //HedgeRequest(amount.toLong, rate.toLong)
-  //Map("sats"->amount, "rate"->rate)
   def addPosition(amount: MilliSatoshi, rate: MilliSatoshi)(implicit http: SttpBackend[Future, Nothing], ec: ExecutionContext): Future[Response[HedgeResponse]] = {
     val htlcApiUri = serviceUri.path("/hedge/htlc")
     implicit val serialization = org.json4s.native.Serialization
@@ -33,7 +32,7 @@ class KolliderClient(pluginConfig: AlarmBotConfig) {
     sttp.readTimeout(readTimeout)
       .contentType("application/json")
       .post(htlcApiUri)
-      .body(HedgeRequest(amount.toLong, rate.toLong))
+      .body(Map("sats"->amount, "rate"->rate))
       .response(asJson[HedgeResponse])
       .send()
       .map(identity)
