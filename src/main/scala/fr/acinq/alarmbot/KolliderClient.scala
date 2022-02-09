@@ -38,9 +38,11 @@ class KolliderClient(pluginConfig: AlarmBotConfig) {
 
     val hedgeRequest = HedgeRequest(
       "test",
-      amount.truncateToSatoshi.toLong.abs,
+      amount.truncateToSatoshi.toLong,
       rate.truncateToSatoshi.toLong)
+
     println(write(hedgeRequest))
+
     sttp.readTimeout(readTimeout)
       .contentType("application/json")
       .post(htlcApiUri)
