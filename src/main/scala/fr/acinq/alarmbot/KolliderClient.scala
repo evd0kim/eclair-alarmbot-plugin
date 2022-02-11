@@ -18,7 +18,7 @@ class KolliderClient(pluginConfig: AlarmBotConfig) {
   val chatId = pluginConfig.chatId
   val baseUri: Uri = uri"https://api.telegram.org/bot$botApiKey/sendMessage"
 
-  val serviceUri: Uri = uri"http://192.168.2.10:8081"
+  val serviceUri: Uri = uri"${pluginConfig.hedgeService}"
 
   val readTimeout: FiniteDuration = 10.seconds
 
@@ -30,14 +30,14 @@ class KolliderClient(pluginConfig: AlarmBotConfig) {
   case class HedgeResponse()
   case class HedgeRequest(channel_id: String, sats: Long, rate: Long)
 
-  def addPosition(amount: MilliSatoshi, rate: MilliSatoshi)(implicit http: SttpBackend[Future, Nothing], ec: ExecutionContext): Future[Response[HedgeResponse]] = {
+  def addPosition(channel: String, amount: MilliSatoshi, rate: MilliSatoshi)(implicit http: SttpBackend[Future, Nothing], ec: ExecutionContext): Future[Response[HedgeResponse]] = {
     implicit val serialization = org.json4s.native.Serialization
     implicit val formats = org.json4s.DefaultFormats
 
     val htlcApiUri = serviceUri.path("/hedge/htlc")
 
     val hedgeRequest = HedgeRequest(
-      "test",
+      channel,
       amount.truncateToSatoshi.toLong,
       rate.truncateToSatoshi.toLong)
 
