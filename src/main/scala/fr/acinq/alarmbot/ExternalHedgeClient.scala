@@ -1,6 +1,6 @@
 package fr.acinq.alarmbot
 
-import com.softwaremill.sttp._
+import sttp.client3.{asString, Response, SttpBackend, UriContext, basicRequest}
 import akka.actor.DiagnosticActorLogging
 
 import scala.util.{Failure, Success, Try}
@@ -12,8 +12,8 @@ import org.json4s.jackson.Serialization
 // requests
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import com.softwaremill.sttp.json4s.asJson
-import com.softwaremill.sttp.{StatusCodes, SttpBackend, SttpBackendOptions, Uri, UriContext, sttp}
+
+import sttp.client3.{HttpURLConnectionBackend, Response, SttpBackend, UriContext, basicRequest}
 
 class ExternalHedgeClient(kit: Kit, setup: Setup, pluginConfig: AlarmBotConfig) extends DiagnosticActorLogging {
   val kolliderClient = new KolliderClient(pluginConfig)

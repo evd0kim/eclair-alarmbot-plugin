@@ -1,16 +1,13 @@
 package fr.acinq.alarmbot
 
-import com.softwaremill.sttp._
-import com.softwaremill.sttp.json4s._
-import fr.acinq.bitcoin.Satoshi
+import sttp.client3.{Response, SttpBackend, UriContext, asString, basicRequest}
+import sttp.model.Uri
 import fr.acinq.eclair.MilliSatoshi
+import sttp.client3.json4s.asJson
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
-//import org.json4s._
-//import org.json4s.jackson.JsonMethods._
-//import org.json4s.JsonDSL._
 import org.json4s.jackson.Serialization.write
 
 class KolliderClient(pluginConfig: AlarmBotConfig) {
@@ -22,19 +19,21 @@ class KolliderClient(pluginConfig: AlarmBotConfig) {
 
   val readTimeout: FiniteDuration = 10.seconds
 
-  def checkAvailability()(implicit http: SttpBackend[Future, Nothing], ec: ExecutionContext): Future[Response[String]] = {
-    val parametrizedUri = serviceUri.path("/state")
-    sttp.readTimeout(readTimeout).get(parametrizedUri).send.map(identity)
+  def checkAvailability()(implicit sttpBackend: SttpBackend[Future, _], ec: ExecutionContext): Future[Response[String]] = {
+    val parametrizedUri = serviceUri.addPath("state")
+    basicRequest.get(parametrizedUri)
+      .response(asString.getRight)
+      .send(sttpBackend).map(identity)
   }
 
   case class HedgeResponse()
   case class HedgeRequest(channel_id: String, sats: Long, rate: Long)
 
-  def addPosition(channel: String, amount: MilliSatoshi, rate: MilliSatoshi)(implicit http: SttpBackend[Future, Nothing], ec: ExecutionContext): Future[Response[HedgeResponse]] = {
+  def addPosition(channel: String, amount: MilliSatoshi, rate: MilliSatoshi)(implicit sttpBackend: SttpBackend[Future, _], ec: ExecutionContext): Future[Response[HedgeResponse]] = {
     implicit val serialization = org.json4s.native.Serialization
     implicit val formats = org.json4s.DefaultFormats
 
-    val htlcApiUri = serviceUri.path("/hedge/htlc")
+    val htlcApiUri = serviceUri.addPath("hedge", "htlc")
 
     val hedgeRequest = HedgeRequest(
       channel,
@@ -43,17 +42,15 @@ class KolliderClient(pluginConfig: AlarmBotConfig) {
 
     println(write(hedgeRequest))
 
-    sttp.readTimeout(readTimeout)
-      .contentType("application/json")
-      .post(htlcApiUri)
-      .body(write(hedgeRequest))
-      .response(asJson[HedgeResponse])
-      .send()
-      .map(identity)
+    basicRequest.post(htlcApiUri)
+      .response(asJson[HedgeResponse].getRight)
+      .send(sttpBackend)
   }
 
-  def sendMessage(amount: MilliSatoshi, rate: MilliSatoshi)(implicit http: SttpBackend[Future, Nothing], ec: ExecutionContext): Future[Response[String]] = {
-    val parametrizedUri = baseUri.params("chat_id" -> chatId, "text" -> s"hedging ${amount} ${rate}", "parse_mode" -> "HTML")
-    sttp.readTimeout(readTimeout).get(parametrizedUri).send.map(identity)
+  def sendMessage(amount: MilliSatoshi, rate: MilliSatoshi)(implicit sttpBackend: SttpBackend[Future, Nothing], ec: ExecutionContext): Future[Response[String]] = {
+    val parametrizedUri = baseUri.addParams("chat_id" -> chatId, "text" -> s"hedging ${amount} ${rate}", "parse_mode" -> "HTML")
+    basicRequest.get(parametrizedUri)
+      .response(asString.getRight)
+      .send(sttpBackend)
   }
 }

@@ -1,6 +1,5 @@
 package fr.acinq.alarmbot
 
-import com.softwaremill.sttp.Uri
 import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 import net.ceedubs.ficus.Ficus._
 
