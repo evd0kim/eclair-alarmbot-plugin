@@ -43,6 +43,8 @@ class KolliderClient(pluginConfig: AlarmBotConfig) {
     println(write(hedgeRequest))
 
     basicRequest.post(htlcApiUri)
+      .contentType("application/json")
+      .body(write(hedgeRequest))
       .response(asJson[HedgeResponse].getRight)
       .send(sttpBackend)
   }
