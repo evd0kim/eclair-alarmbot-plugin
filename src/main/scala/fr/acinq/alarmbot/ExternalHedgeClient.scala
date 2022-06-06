@@ -22,8 +22,13 @@ class ExternalHedgeClient(kit: Kit, setup: Setup, pluginConfig: AlarmBotConfig) 
   }
 
   override def preStart(): Unit = {
-    log.info(s"Launching hedge bot")
-    kolliderClient.checkAvailability().onComplete(logReport("preStart"))
+    log.info(s"launching hedge bot")
+    pluginConfig.hedgeServicesMap.foreach {
+      case(ticker, host) => {
+        log.info(s"checking $ticker hedging service on $host")
+        kolliderClient.checkAvailability(host).onComplete(logReport("preStart"))
+      }
+    }
   }
 
   override def receive: Receive = {

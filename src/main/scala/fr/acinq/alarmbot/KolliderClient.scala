@@ -15,15 +15,12 @@ class KolliderClient(pluginConfig: AlarmBotConfig) {
   val chatId = pluginConfig.chatId
   val baseUri: Uri = uri"https://api.telegram.org/bot$botApiKey/sendMessage"
 
-  //val serviceUri: Uri = uri"${pluginConfig.hedgeServices.getString("BTCEUR")}"
-
   val readTimeout: FiniteDuration = 10.seconds
 
-  def checkAvailability()(implicit sttpBackend: SttpBackend[Future, _], ec: ExecutionContext): Future[Response[String]] = {
-    val parametrizedUri: Uri = uri"${pluginConfig.hedgeServicesMap.get("BTCEUR")}" //serviceUri.addPath("state")
-    basicRequest.get(parametrizedUri)
-      .response(asString.getRight)
-      .send(sttpBackend).map(identity)
+  def checkAvailability(host: String)(implicit sttpBackend: SttpBackend[Future, _], ec: ExecutionContext): Future[Response[String]] = {
+      basicRequest.get(uri"$host/stats")
+        .response(asString.getRight)
+        .send(sttpBackend).map(identity)
   }
 
   case class HedgeResponse()
@@ -34,7 +31,6 @@ class KolliderClient(pluginConfig: AlarmBotConfig) {
     implicit val formats = org.json4s.DefaultFormats
 
     val htlcApiUri: Uri = uri"${pluginConfig.hedgeServicesMap.get("BTCEUR")}/hedge/htlc"
-    //val htlcApiUri = serviceUri.addPath("hedge", "htlc")
 
     val hedgeRequest = HedgeRequest(
       channel,

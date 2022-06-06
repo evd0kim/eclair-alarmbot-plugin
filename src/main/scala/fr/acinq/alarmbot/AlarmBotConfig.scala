@@ -14,7 +14,7 @@ class AlarmBotConfig(datadir: File) {
   val botApiKey: String = config.as[String]("config.botApiKey")
 
   val chatId: String = config.as[String]("config.chatId")
-  //val hedgeServices: TypesafeConfig = config.getObject("config.hedgeServices").toConfig
+  val hedgeServices: TypesafeConfig = config.getObject("config.hedgeServices").toConfig
   val hedgeServicesMap: scala.collection.mutable.Map[String,String]  = collection.mutable.Map()
-  config.getObject("config.hedgeServices").asScala.foreach({ case (k, v) => hedgeServicesMap += (k -> v.toString) })
+  config.getObject("config.hedgeServices").asScala.foreach({ case (k, _) => hedgeServicesMap += (k -> hedgeServices.getString(k)) })
 }
