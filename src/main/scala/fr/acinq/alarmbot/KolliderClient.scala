@@ -30,7 +30,9 @@ class KolliderClient(pluginConfig: AlarmBotConfig) {
     implicit val serialization = org.json4s.native.Serialization
     implicit val formats = org.json4s.DefaultFormats
 
-    val htlcApiUri: Uri = uri"${pluginConfig.hedgeServicesMap.get("BTCEUR")}/hedge/htlc"
+    val htlcApiUri: Uri = uri"${pluginConfig.hedgeServicesMap.apply("BTCEUR")}/hedge/htlc"
+
+    println(htlcApiUri)
 
     val hedgeRequest = HedgeRequest(
       channel,
