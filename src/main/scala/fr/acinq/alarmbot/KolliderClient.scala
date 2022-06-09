@@ -7,7 +7,6 @@ import sttp.client3.json4s.asJson
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-
 import org.json4s.jackson.Serialization.write
 
 class KolliderClient(pluginConfig: AlarmBotConfig) {
@@ -26,20 +25,18 @@ class KolliderClient(pluginConfig: AlarmBotConfig) {
   case class HedgeResponse()
   case class HedgeRequest(channel_id: String, sats: Long, rate: Long)
 
-  def addPosition(channel: String, amount: MilliSatoshi, rate: MilliSatoshi)(implicit sttpBackend: SttpBackend[Future, _], ec: ExecutionContext): Future[Response[HedgeResponse]] = {
+  def addPosition(channel: String, ticker: String, amount: MilliSatoshi, rate: MilliSatoshi)(implicit sttpBackend: SttpBackend[Future, _], ec: ExecutionContext): Future[Response[HedgeResponse]] = {
     implicit val serialization = org.json4s.native.Serialization
     implicit val formats = org.json4s.DefaultFormats
 
-    val htlcApiUri: Uri = uri"${pluginConfig.hedgeServicesMap.apply("BTCEUR")}/hedge/htlc"
-
-    println(htlcApiUri)
+    val htlcApiUri: Uri = uri"${pluginConfig.hedgeServicesMap.apply(ticker)}/hedge/htlc"
 
     val hedgeRequest = HedgeRequest(
       channel,
       amount.truncateToSatoshi.toLong,
       rate.truncateToSatoshi.toLong)
 
-    println(write(hedgeRequest))
+    println(s"Ticker $ticker $htlcApiUri ${write(hedgeRequest)}")
 
     basicRequest.post(htlcApiUri)
       .contentType("application/json")

@@ -33,7 +33,7 @@ class ExternalHedgeClient(kit: Kit, setup: Setup, pluginConfig: AlarmBotConfig) 
 
   override def receive: Receive = {
     case msg: ExternalHedgeMessage => {
-      kolliderClient.addPosition(msg.channel, msg.amount, msg.rate).onComplete(logReport("ExternalHedgeMessage"))
+      kolliderClient.addPosition(msg.channel, msg.ticker, msg.amount, msg.rate).onComplete(logReport("ExternalHedgeMessage"))
     }
   }
 }
