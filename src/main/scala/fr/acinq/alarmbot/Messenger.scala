@@ -1,6 +1,8 @@
 package fr.acinq.alarmbot
 
-import com.softwaremill.sttp._
+import sttp.client3._
+import sttp.model.Uri
+
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -11,8 +13,9 @@ class Messenger(pluginConfig: AlarmBotConfig) {
 
   val readTimeout: FiniteDuration = 10.seconds
 
-  def sendMessage(message: String)(implicit http: SttpBackend[Future, Nothing], ec: ExecutionContext): Future[Response[String]] = {
+  def sendMessage(message: String)(implicit http: SttpBackend[Future, _], ec: ExecutionContext): Future[Response[Either[String, String]]] = {
     val parametrizedUri = baseUri.params("chat_id" -> chatId, "text" -> message, "parse_mode" -> "HTML")
-    sttp.readTimeout(readTimeout).get(parametrizedUri).send.map(identity)
+    val request = basicRequest.readTimeout(readTimeout).get(parametrizedUri)
+    http.send(request)
   }
 }
