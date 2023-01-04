@@ -21,12 +21,13 @@ class WatchdogSync(kit: Kit, setup: Setup, pluginConfig: AlarmBotConfig) extends
   context.system.eventStream.subscribe(channel = classOf[ZMQEvent], subscriber = self)
   context.system.eventStream.subscribe(channel = classOf[NotificationsLogger.NotifyNodeOperator], subscriber = self)
 
-  import setup.{ec, sttpBackend}
+  import setup.ec
+  implicit val sttpBackend = SttpUtil.createSttpBackend(kit.nodeParams.socksProxy_opt, pluginConfig.useProxy, log)
 
   def logReport(tag: String): PartialFunction[Try[Response[Either[String, String]]], Unit] = {
-    case Failure(reason) => log.info(s"PLGN AlarmBot, failed to send '$tag', reason: ${reason.getMessage}")
+    case Failure(reason) => log.error(s"PLGN AlarmBot, failed to send '$tag', reason: ${reason.getMessage}")
     case Success(response) => response.body match {
-      case Left(reason) => log.info(s"PLGN AlarmBot, failed to send '$tag', reason: $reason")
+      case Left(reason) => log.error(s"PLGN AlarmBot, failed to send '$tag', reason: $reason")
       case Right(_) => log.info(s"PLGN AlarmBot, sent '$tag' successfully, response code=${response.code}, body=${response.body}")
     }
   }
