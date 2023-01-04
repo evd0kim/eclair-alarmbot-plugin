@@ -1,4 +1,6 @@
-Simplest possible [Eclair](https://github.com/ACINQ/eclair) plugin. The latest supported version of Eclair is 0.8.0
+# Eclair Alarm Bot Plugin
+
+Simplest possible [Eclair](https://github.com/ACINQ/eclair) plugin. It sends Eclair notifications to a Telegram bot. The latest supported version of Eclair is 0.8.0.
 
 It can be upgraded with new events or even important node statistics.
 
@@ -18,7 +20,7 @@ mvn install -DskipTests=true
 
 Then build the plugin
 ```bash
-git clone https://github.com/engenegr/eclair-alarmbot-plugin.git
+git clone https://github.com/evd0kim/eclair-alarmbot-plugin.git
 
 cd eclair-alarmbot-plugin/
 
@@ -44,16 +46,17 @@ config {
     botApiKey = "PUT_YOUR_BOT_KEY_HERE"
     chatId = "PUT_ID_OF_YOUR_PERSONAL_CHAT"
     hedgeServiceUri = "OPTIONAL_URL_TO_YOUR_HEDGE_SERVICE"
+    useProxy = "IF_TRUE_USE_ECLAIR_PROXY"
 }
 ```
 
-## How to get `chatId`?
+## How to get Telegram `chatId`?
 
-1. Start new bot
+1. Start a new bot
 2. Use `curl` for getting bot updates from Telegram
 ```
 curl https://api.telegram.org/bot<PUT_YOUR_BOT_KEY_HERE>/getUpdates
 ```
 3. You should get response from Telegram server where you can find your 
    `chatId`. If it didn't happen, try to write something in the Bot chat
-   and repeat 2.
+   and repeat step 2.

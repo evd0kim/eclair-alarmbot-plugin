@@ -13,7 +13,8 @@ import scala.util.{Failure, Success, Try}
 class ExternalHedgeClient(kit: Kit, setup: Setup, pluginConfig: AlarmBotConfig) extends DiagnosticActorLogging {
   val kolliderClient = new KolliderClient(pluginConfig)
 
-  import setup.{ec, sttpBackend}
+  import setup.ec
+  implicit val sttpBackend = SttpUtil.createSttpBackend(kit.nodeParams.socksProxy_opt, pluginConfig.useProxy, log)
 
   implicit val serialization: Serialization = Serialization
 
