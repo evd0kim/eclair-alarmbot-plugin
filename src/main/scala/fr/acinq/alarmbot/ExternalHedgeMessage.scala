@@ -10,6 +10,8 @@ import fr.acinq.eclair.MilliSatoshi
  */
 trait ExternalHedgeMessage {
   def senderEntity: String
+  def localUpdates: Long
+  def remoteUpdates: Long
   def ticker: String
   def channel: String
   def amount: MilliSatoshi

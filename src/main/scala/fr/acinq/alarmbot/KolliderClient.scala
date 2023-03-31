@@ -17,26 +17,29 @@ class KolliderClient(pluginConfig: AlarmBotConfig) {
   val readTimeout: FiniteDuration = 10.seconds
 
   def checkAvailability(host: String)(implicit sttpBackend: SttpBackend[Future, _], ec: ExecutionContext): Future[Response[String]] = {
-      basicRequest.get(uri"$host/stats")
+      basicRequest.get(uri"$host/ping")
         .response(asString.getRight)
         .send(sttpBackend).map(identity)
   }
 
   case class HedgeResponse()
-  case class HedgeRequest(channel_id: String, sats: Long, rate: Long)
+  case class HedgeRequest(channel: String, local: Long, remote: Long, ticker: String, amount: Long, rate: Long)
 
-  def addPosition(channel: String, ticker: String, amount: MilliSatoshi, rate: MilliSatoshi)(implicit sttpBackend: SttpBackend[Future, _], ec: ExecutionContext): Future[Response[HedgeResponse]] = {
+  def addPosition(channel: String, localUpdates: Long, remoteUpdates: Long, ticker: String, amount: MilliSatoshi, rate: MilliSatoshi)(implicit sttpBackend: SttpBackend[Future, _], ec: ExecutionContext): Future[Response[HedgeResponse]] = {
     implicit val serialization = org.json4s.native.Serialization
     implicit val formats = org.json4s.DefaultFormats
 
-    val htlcApiUri: Uri = uri"${pluginConfig.hedgeServicesMap.apply(ticker)}/hedge/htlc"
+    val htlcApiUri: Uri = uri"${pluginConfig.hedgeServicesMap.apply(ticker)}/hedge"
 
     val hedgeRequest = HedgeRequest(
       channel,
+      localUpdates,
+      remoteUpdates,
+      ticker.toUpperCase(),
       amount.truncateToSatoshi.toLong,
       rate.truncateToSatoshi.toLong)
 
-    println(s"Ticker $ticker $htlcApiUri ${write(hedgeRequest)}")
+    //println(s"Channel $channel ticker $ticker $htlcApiUri ${write(hedgeRequest)}")
 
     basicRequest.post(htlcApiUri)
       .contentType("application/json")

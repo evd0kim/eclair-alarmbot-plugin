@@ -11,6 +11,8 @@ import org.json4s.jackson.Serialization
 class ExternalHedgeClient(kit: Kit, setup: Setup, pluginConfig: AlarmBotConfig) extends DiagnosticActorLogging {
   val kolliderClient = new KolliderClient(pluginConfig)
 
+  val tgbot = new Messenger(pluginConfig)
+
   import setup.{ec, sttpBackend}
   implicit val serialization: Serialization = Serialization
 
@@ -32,8 +34,12 @@ class ExternalHedgeClient(kit: Kit, setup: Setup, pluginConfig: AlarmBotConfig) 
   }
 
   override def receive: Receive = {
-    case msg: ExternalHedgeMessage => {
-      kolliderClient.addPosition(msg.channel, msg.ticker, msg.amount, msg.rate).onComplete(logReport("ExternalHedgeMessage"))
-    }
+    case msg: ExternalHedgeMessage if pluginConfig.hedgeServicesMap.contains(msg.ticker) =>
+      kolliderClient.addPosition(msg.channel, msg.localUpdates, msg.remoteUpdates, msg.ticker, msg.amount, msg.rate).onComplete(logReport("ExternalHedgeMessage"))
+      if (pluginConfig.hedgeNotify) {
+        tgbot.sendMessage(s"${msg.channel}\n${msg.ticker}\n${msg.amount}\n${msg.rate}")
+      }
+    case msg: ExternalHedgeMessage =>
+      log.error(s"ignoring unknown ExternalHedgeMessage with ${msg.ticker}")
   }
 }
