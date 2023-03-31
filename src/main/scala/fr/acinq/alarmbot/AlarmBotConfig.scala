@@ -1,6 +1,5 @@
 package fr.acinq.alarmbot
 
-import com.softwaremill.sttp.Uri
 import com.typesafe.config.{ConfigFactory, Config => TypesafeConfig}
 import net.ceedubs.ficus.Ficus._
 
@@ -14,5 +13,8 @@ class AlarmBotConfig(datadir: File) {
   val botApiKey: String = config.as[String]("config.botApiKey")
 
   val chatId: String = config.as[String]("config.chatId")
-  val hedgeService: String = config.as[String]("config.hedgeServiceUri")
+
+  val hedgeService: Option[String] = config.as[Option[String]]("config.hedgeServiceUri")
+
+  val useProxy: Boolean = config.as[Option[Boolean]]("config.useProxy").getOrElse(true)
 }

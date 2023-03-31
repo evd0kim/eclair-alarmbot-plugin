@@ -1,19 +1,11 @@
 package fr.acinq.alarmbot
 
-import com.softwaremill.sttp.{Response}
 import akka.actor.DiagnosticActorLogging
-import fr.acinq.eclair.{Kit, Setup}
-import fr.acinq.eclair.blockchain.watchdogs.BlockchainWatchdog.DangerousBlocksSkew
-import akka.actor.DiagnosticActorLogging
-import com.softwaremill.sttp.{SttpBackend, _}
 import fr.acinq.eclair.blockchain.bitcoind.zmq.ZMQActor.{ZMQConnected, ZMQDisconnected, ZMQEvent}
 import fr.acinq.eclair.blockchain.watchdogs.BlockchainWatchdog.DangerousBlocksSkew
-import fr.acinq.eclair.channel.{ChannelClosed, ChannelStateChanged, NORMAL, WAIT_FOR_FUNDING_LOCKED}
-
-import fr.acinq.eclair.{Kit, Setup}
-
-import scala.concurrent.duration._
-import scala.concurrent.{ExecutionContext, Future}
+import fr.acinq.eclair.channel._
+import fr.acinq.eclair.{Kit, NotificationsLogger, Setup}
+import sttp.client3._
 
 import scala.util.{Failure, Success, Try}
 
@@ -26,12 +18,18 @@ class WatchdogSync(kit: Kit, setup: Setup, pluginConfig: AlarmBotConfig) extends
   context.system.eventStream.subscribe(channel = classOf[ChannelStateChanged], subscriber = self)
   context.system.eventStream.subscribe(channel = classOf[ChannelClosed], subscriber = self)
   context.system.eventStream.subscribe(channel = classOf[ZMQEvent], subscriber = self)
+  context.system.eventStream.subscribe(channel = classOf[ZMQEvent], subscriber = self)
+  context.system.eventStream.subscribe(channel = classOf[NotificationsLogger.NotifyNodeOperator], subscriber = self)
 
-  import setup.{ec, sttpBackend}
+  import setup.ec
+  implicit val sttpBackend = SttpUtil.createSttpBackend(kit.nodeParams.socksProxy_opt, pluginConfig.useProxy, log)
 
-  def logReport(tag: String): PartialFunction[Try[Response[String]], Unit] = {
-    case Failure(reason) => log.info(s"PLGN AlarmBot, failed to send '$tag', reason: ${reason.getMessage}")
-    case Success(response) => log.info(s"PLGN AlarmBot, sent '$tag' successfully, response code=${response.code}, body=${response.body}")
+  def logReport(tag: String): PartialFunction[Try[Response[Either[String, String]]], Unit] = {
+    case Failure(reason) => log.error(s"PLGN AlarmBot, failed to send '$tag', reason: ${reason.getMessage}")
+    case Success(response) => response.body match {
+      case Left(reason) => log.error(s"PLGN AlarmBot, failed to send '$tag', reason: $reason")
+      case Right(_) => log.info(s"PLGN AlarmBot, sent '$tag' successfully, response code=${response.code}, body=${response.body}")
+    }
   }
 
   override def preStart(): Unit = tgbot.sendMessage(s"Node is starting\nAlias: ${kit.nodeParams.alias}\nNodeId: ${kit.nodeParams.nodeId}\nInstanceId: ${kit.nodeParams.instanceId} ").onComplete(logReport("preStart"))
@@ -55,5 +53,13 @@ class WatchdogSync(kit: Kit, setup: Setup, pluginConfig: AlarmBotConfig) extends
 
     case msg: CustomAlarmBotMessage =>
       tgbot.sendMessage(s"${msg.senderEntity}: ${msg.message}").onComplete(logReport("CustomAlarmBotMessage"))
+
+    case NotificationsLogger.NotifyNodeOperator(severity, message) =>
+      val prefix = severity match {
+        case NotificationsLogger.Info => ""
+        case NotificationsLogger.Warning => "WARNING: "
+        case NotificationsLogger.Error => "ERROR: "
+      }
+      tgbot.sendMessage(s"$prefix$message")
   }
 }

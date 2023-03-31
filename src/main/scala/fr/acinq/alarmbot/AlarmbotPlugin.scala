@@ -16,7 +16,9 @@ class AlarmbotPlugin extends Plugin with Logging {
 
   override def onKit(kit: Kit): Unit = {
     kit.system actorOf Props(classOf[WatchdogSync], kit, setupRef, pluginConfig)
-    kit.system actorOf Props(classOf[ExternalHedgeClient], kit, setupRef, pluginConfig)
+    if (pluginConfig.hedgeService.isDefined) {
+      kit.system actorOf Props(classOf[ExternalHedgeClient], kit, setupRef, pluginConfig)
+    }
   }
 
   override def params: PluginParams = new PluginParams {
