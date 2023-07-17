@@ -36,7 +36,7 @@ class WatchdogSync(kit: Kit, setup: Setup, pluginConfig: AlarmBotConfig) extends
 
   override def receive: Receive = {
     case ChannelStateChanged(_, channelId, _, remoteNodeId, WAIT_FOR_CHANNEL_READY | WAIT_FOR_DUAL_FUNDING_READY, NORMAL, commitsOpt) =>
-      val details = commitsOpt.map(commtis => s"capacity: ${commtis.capacity}, announceChannel: ${commtis.announceChannel}")
+      val details = commitsOpt.map(commits => s"capacity: ${commits.latest.capacity}, announceChannel: ${commits.announceChannel}")
       tgbot.sendMessage(s"New channel established, remoteNodeId: $remoteNodeId, channelId: $channelId, ${details.orNull}").onComplete(logReport("ChannelStateChanged"))
 
     case ChannelClosed(_, channelId, closingType, _) =>
