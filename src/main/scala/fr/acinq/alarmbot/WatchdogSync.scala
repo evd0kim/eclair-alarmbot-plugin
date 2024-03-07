@@ -7,6 +7,7 @@ import fr.acinq.eclair.channel._
 import fr.acinq.eclair.{Kit, NotificationsLogger, Setup}
 import sttp.client3._
 
+import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 
@@ -22,7 +23,7 @@ class WatchdogSync(kit: Kit, setup: Setup, pluginConfig: AlarmBotConfig) extends
   context.system.eventStream.subscribe(channel = classOf[NotificationsLogger.NotifyNodeOperator], subscriber = self)
 
   import setup.ec
-  implicit val sttpBackend = SttpUtil.createSttpBackend(kit.nodeParams.socksProxy_opt, pluginConfig.useProxy, log)
+  implicit val sttpBackend: SttpBackend[Future, _] = SttpUtil.createSttpBackend(kit.nodeParams.socksProxy_opt, pluginConfig.useProxy, log)
 
   def logReport(tag: String): PartialFunction[Try[Response[Either[String, String]]], Unit] = {
     case Failure(reason) => log.error(s"PLGN AlarmBot, failed to send '$tag', reason: ${reason.getMessage}")
