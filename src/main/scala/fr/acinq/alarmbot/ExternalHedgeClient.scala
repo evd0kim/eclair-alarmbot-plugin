@@ -6,6 +6,7 @@ import org.json4s.Serialization
 import org.json4s.jackson.Serialization
 import sttp.client3._
 
+import scala.concurrent.Future
 import scala.util.{Failure, Success, Try}
 
 // requests
@@ -14,7 +15,7 @@ class ExternalHedgeClient(kit: Kit, setup: Setup, pluginConfig: AlarmBotConfig) 
   val kolliderClient = new KolliderClient(pluginConfig)
 
   import setup.ec
-  implicit val sttpBackend = SttpUtil.createSttpBackend(kit.nodeParams.socksProxy_opt, pluginConfig.useProxy, log)
+  implicit val sttpBackend: SttpBackend[Future, _] = SttpUtil.createSttpBackend(kit.nodeParams.socksProxy_opt, pluginConfig.useProxy, log)
 
   implicit val serialization: Serialization = Serialization
 
