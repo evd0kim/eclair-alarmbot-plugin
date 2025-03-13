@@ -1,6 +1,6 @@
 # Eclair Alarm Bot Plugin
 
-Simplest possible [Eclair](https://github.com/ACINQ/eclair) plugin. It sends Eclair notifications to a Telegram bot. The latest supported version of Eclair is 0.10.0.
+Simplest possible [Eclair](https://github.com/ACINQ/eclair) plugin. It sends Eclair notifications to a Telegram bot. The latest supported version of Eclair is 0.12.0.
 
 It can be upgraded with new events or even important node statistics.
 
@@ -13,7 +13,7 @@ git clone https://github.com/ACINQ/eclair.git
 
 cd eclair/
 
-git checkout v0.10.0
+git checkout v0.12.0
 
 mvn install -DskipTests=true
 ```
